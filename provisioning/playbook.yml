@@ -265,5 +265,8 @@
       ansible.builtin.assert:
         that:
           - (item.stdout | from_json).status == 101
+        fail_msg: "{{ item.item.key }} ({{ item.item.value }}): {{ item.stdout }} {{ item.stderr }}"
+        quiet: true
       loop: "{{ meko_agent.results }}"
-      no_log: true
+      loop_control:
+        label: "{{ item.item.key }}"

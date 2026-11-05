@@ -256,7 +256,8 @@
     - name: Chạy thử agent với từng đội
       ansible.builtin.command:
         argv: [/usr/bin/python3, /opt/meko-checker/agent.py, --config, /etc/meko-checker/config.json]
-        stdin: '{"task": "backup", "action": "check", "ip": "{{ item.value }}"}'
+        # Khoảng trắng đầu chuỗi giữ nguyên JSON; không có nó Ansible đổi chuỗi thành dict Python.
+        stdin: ' {"task": "backup", "action": "check", "ip": "{{ item.value }}"}'
       loop: "{{ meko_addresses | dict2items }}"
       register: meko_agent
       changed_when: false

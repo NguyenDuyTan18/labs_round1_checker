@@ -1,0 +1,22 @@
+# Cấu hình Meko Boutique cho CyberRangeCZ.
+#
+# LƯU Ý BẢO MẬT: các mật khẩu dưới đây được cấu hình sẵn theo yêu cầu vận hành lab.
+# Đây là mật khẩu CHỈ DÙNG trong môi trường đào tạo cô lập. Hãy đổi toàn bộ trước khi
+# dùng ngoài một cloud huấn luyện riêng tư. Không expose dịch vụ ra Internet.
+
+# Mật khẩu SSH/console cho tài khoản từng đội (đăng nhập VM Kali bằng password).
+# Tên tài khoản trùng tên host: team1 / team2 / team3.
+meko_team_passwords:
+  team1: "MekoTeam1@2026"
+  team2: "MekoTeam2@2026"
+  team3: "MekoTeam3@2026"
+
+# Khóa gốc sinh mật khẩu khu nhân viên riêng cho từng đội: sha256("<khóa>:<team>").
+# Chỉ máy checker có đủ mật khẩu; VM đội chỉ nhận mật khẩu của chính đội đó.
+meko_staff_secret: "e625660acefd02eaff2b705bb0fa92be5384e9bd12d263fd"
+
+# Địa chỉ LAN của từng đội (khớp topology.yml) để kiểm tra kết nối chéo đội.
+meko_addresses:
+  team1: "10.90.0.11"
+  team2: "10.90.0.12"
+  team3: "10.90.0.13"

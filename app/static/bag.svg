@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img" aria-label="Túi da">
+  <rect width="400" height="480" fill="#e9e2d6"/>
+  <path d="M150 150 Q200 90 250 150" fill="none" stroke="#7a5a3c" stroke-width="10"/>
+  <rect x="120" y="150" width="160" height="170" rx="16" fill="#a9794f" stroke="#6f4e30" stroke-width="3"/>
+  <path d="M120 195 H280" stroke="#6f4e30" stroke-width="3"/>
+  <rect x="188" y="188" width="24" height="16" rx="3" fill="#6f4e30"/>
+</svg>

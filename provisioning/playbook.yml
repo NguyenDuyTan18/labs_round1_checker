@@ -1,0 +1,269 @@
+---
+- name: Triển khai Meko Boutique độc lập cho từng đội
+  hosts: 'team1:team2:team3'
+  become: true
+  gather_facts: true
+  pre_tasks:
+    - name: Cấu hình tài khoản đội, khóa kali và bật SSH password
+      ansible.builtin.include_tasks: trainee-access.yml
+    - name: Áp dụng cấu hình SSH trước khi triển khai web
+      ansible.builtin.meta: flush_handlers
+
+  tasks:
+    - name: Cài Apache và runtime ứng dụng
+      ansible.builtin.apt:
+        name: [apache2, python3-flask, python3-waitress, sudo]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Đảm bảo thư mục log của Apache tồn tại
+      ansible.builtin.file:
+        path: /var/log/apache2
+        state: directory
+        owner: root
+        group: adm
+        mode: '0750'
+
+    - name: Tạo tài khoản dịch vụ hạn chế
+      ansible.builtin.user:
+        name: meko-web
+        system: true
+        shell: /usr/sbin/nologin
+        create_home: false
+
+    - name: Tạo thư mục cấu hình được bảo vệ
+      ansible.builtin.file:
+        path: /etc/meko-boutique
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: Chép mã nguồn ứng dụng lên VM
+      ansible.builtin.copy:
+        src: '{{ playbook_dir }}/../app/'
+        dest: /opt/meko-boutique/
+        owner: '{{ inventory_hostname }}'
+        group: users
+        mode: 'u=rwX,go=rX'
+      notify: Restart Meko Boutique
+
+    - name: Tạo thư mục dữ liệu bền vững cho dịch vụ
+      ansible.builtin.file:
+        path: /var/lib/meko-boutique
+        state: directory
+        owner: meko-web
+        group: meko-web
+        mode: '0700'
+
+    - name: Ghi mật khẩu nhân viên (cấu hình sẵn) cho khu vận hành
+      ansible.builtin.copy:
+        dest: /etc/meko-boutique/staff.env
+        owner: root
+        group: root
+        mode: '0600'
+        content: "MEKO_STAFF_PASSWORD={{ (meko_staff_secret ~ ':' ~ inventory_hostname) | hash('sha256') }}\n"
+      no_log: true
+      notify: Restart Meko Boutique
+
+    - name: Cho đội restart đúng dịch vụ của mình sau khi vá source
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/meko-team-service
+        owner: root
+        group: root
+        mode: '0440'
+        content: "{{ inventory_hostname }} ALL=(root) NOPASSWD: /usr/bin/systemctl restart meko-boutique.service\n"
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Tạo systemd service cho ứng dụng
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/meko-boutique.service
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=Meko Boutique training shop
+          After=network.target
+          [Service]
+          User=meko-web
+          Group=meko-web
+          WorkingDirectory=/opt/meko-boutique
+          Environment=TEAM_ID={{ inventory_hostname }}
+          Environment=MEKO_DATA=/var/lib/meko-boutique
+          Environment=HOST=127.0.0.1
+          Environment=PORT=8080
+          EnvironmentFile=/etc/meko-boutique/staff.env
+          ExecStart=/usr/bin/python3 /opt/meko-boutique/app.py
+          Restart=on-failure
+          NoNewPrivileges=true
+          PrivateTmp=true
+          ProtectSystem=strict
+          ProtectHome=true
+          ReadWritePaths=/var/lib/meko-boutique
+          [Install]
+          WantedBy=multi-user.target
+      notify: Restart Meko Boutique
+
+    - name: Cấu hình Apache reverse proxy (cổng 80 -> 127.0.0.1:8080)
+      ansible.builtin.copy:
+        dest: /etc/apache2/sites-available/000-meko-boutique.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          <VirtualHost *:80>
+            ServerName {{ meko_addresses[inventory_hostname] }}
+            ProxyPreserveHost On
+            ProxyPass / http://127.0.0.1:8080/
+            ProxyPassReverse / http://127.0.0.1:8080/
+            ErrorLog ${APACHE_LOG_DIR}/meko-error.log
+            CustomLog ${APACHE_LOG_DIR}/meko-access.log combined
+          </VirtualHost>
+      notify: Reload Apache
+
+    - name: Bật module proxy và site Meko
+      ansible.builtin.shell: |
+        set -eu
+        a2enmod proxy proxy_http >/dev/null
+        a2dissite 000-default >/dev/null 2>&1 || true
+        a2ensite 000-meko-boutique >/dev/null
+      args:
+        executable: /bin/sh
+      changed_when: false
+      notify: Reload Apache
+
+    - name: Kiểm tra cấu hình Apache
+      ansible.builtin.command: apache2ctl configtest
+      changed_when: false
+
+    - name: Bật và khởi động dịch vụ web
+      ansible.builtin.systemd:
+        name: meko-boutique
+        daemon_reload: true
+        enabled: true
+        state: started
+
+    - name: Bật dịch vụ Apache
+      ansible.builtin.systemd:
+        name: apache2
+        enabled: true
+        state: started
+
+    - name: Áp dụng restart trước khi kiểm tra health
+      ansible.builtin.meta: flush_handlers
+
+    - name: Kiểm tra health cục bộ qua Apache
+      ansible.builtin.uri:
+        url: http://127.0.0.1/health
+        return_content: true
+        use_proxy: false
+      register: meko_health
+      until: meko_health.status | default(0) == 200
+      retries: 12
+      delay: 2
+
+    - name: Yêu cầu health trả đúng danh tính đội
+      ansible.builtin.assert:
+        that:
+          - meko_health.json.status == 'ok'
+          - meko_health.json.team == inventory_hostname
+
+  handlers:
+    - name: Restart Meko Boutique
+      ansible.builtin.systemd:
+        name: meko-boutique
+        daemon_reload: true
+        state: restarted
+    - name: Reload Apache
+      ansible.builtin.systemd:
+        name: apache2
+        state: reloaded
+    - name: Reload SSH
+      ansible.builtin.service:
+        name: ssh
+        state: reloaded
+
+- name: Kiểm tra kết nối HTTP chéo đội
+  hosts: 'team1:team2:team3'
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Mở health của mọi đội trên LAN
+      ansible.builtin.uri:
+        url: 'http://{{ item.value }}/health'
+        return_content: true
+        use_proxy: false
+      loop: "{{ meko_addresses | dict2items }}"
+      register: meko_peer
+      until: meko_peer.status | default(0) == 200
+      retries: 6
+      delay: 2
+
+    - name: Yêu cầu mỗi phản hồi nhận đúng danh tính đội
+      ansible.builtin.assert:
+        that:
+          - item.json.team == item.item.key
+      loop: "{{ meko_peer.results }}"
+
+- name: Cài agent trên máy checker
+  hosts: checker
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Cài Python cho agent
+      ansible.builtin.apt:
+        name: [python3]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Tạo thư mục agent
+      ansible.builtin.file:
+        path: /opt/meko-checker
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Chép agent và logic checker
+      ansible.builtin.copy:
+        src: '{{ playbook_dir }}/../checker/{{ item }}'
+        dest: '/opt/meko-checker/{{ item }}'
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [agent.py, forcad.py, meko_checker.py]
+
+    - name: Tạo thư mục cấu hình được bảo vệ
+      ansible.builtin.file:
+        path: /etc/meko-checker
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+
+    - name: Ghi địa chỉ và mật khẩu nhân viên của từng đội
+      ansible.builtin.template:
+        src: checker-config.json.j2
+        dest: /etc/meko-checker/config.json
+        owner: root
+        group: root
+        mode: '0600'
+      no_log: true
+
+    - name: Chạy thử agent với từng đội
+      ansible.builtin.command:
+        argv: [/usr/bin/python3, /opt/meko-checker/agent.py, --config, /etc/meko-checker/config.json]
+        stdin: '{"task": "backup", "action": "check", "ip": "{{ item.value }}"}'
+      loop: "{{ meko_addresses | dict2items }}"
+      register: meko_agent
+      changed_when: false
+
+    - name: Yêu cầu mọi đội trả UP
+      ansible.builtin.assert:
+        that:
+          - (item.stdout | from_json).status == 101
+      loop: "{{ meko_agent.results }}"
+      no_log: true

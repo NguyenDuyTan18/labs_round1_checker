@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img" aria-label="Giày lười">
+  <rect width="400" height="480" fill="#e7e4de"/>
+  <g stroke="#5a4632" stroke-width="3" stroke-linejoin="round">
+    <path d="M70 280 Q90 210 150 215 Q200 220 250 255 Q300 285 330 290 Q340 320 320 335 L95 335 Q70 330 70 300 Z" fill="#8a6f50"/>
+    <path d="M70 335 L330 335 Q340 360 310 362 L95 362 Q70 360 70 345 Z" fill="#4e3d2a"/>
+    <path d="M150 230 Q195 248 235 275" fill="none" stroke="#5a4632" stroke-width="3"/>
+  </g>
+</svg>

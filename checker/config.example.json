@@ -1,0 +1,8 @@
+{
+  "timeout": 5,
+  "teams": {
+    "10.90.0.11": {"team": "team1", "url": "http://10.90.0.11", "staff_password": "CHANGE-ME-TEAM1"},
+    "10.90.0.12": {"team": "team2", "url": "http://10.90.0.12", "staff_password": "CHANGE-ME-TEAM2"},
+    "10.90.0.13": {"team": "team3", "url": "http://10.90.0.13", "staff_password": "CHANGE-ME-TEAM3"}
+  }
+}

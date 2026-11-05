@@ -1,0 +1,38 @@
+name: meko-boutique
+# Sandbox Definition cho CyberRangeCZ: ba đội Kali độc lập trên một LAN, một router gateway.
+# Mỗi đội chạy một bản Meko Boutique riêng và có thể truy cập HTTP chéo đội để tấn công.
+# Máy checker chạy agent do ForcAD gọi từ bên ngoài qua SSH quản trị.
+hosts:
+  - name: team1
+    base_box: {image: kali, mgmt_user: debian}
+    flavor: standard.kali
+  - name: team2
+    base_box: {image: kali, mgmt_user: debian}
+    flavor: standard.kali
+  - name: team3
+    base_box: {image: kali, mgmt_user: debian}
+    flavor: standard.kali
+  - name: checker
+    base_box: {image: debian-12-x86_64, mgmt_user: debian}
+    flavor: standard.small
+routers:
+  - name: gateway
+    base_box: {image: debian-12-x86_64, mgmt_user: debian}
+    flavor: standard.small
+wan:
+  name: meko-wan
+  cidr: 100.90.0.0/24
+networks:
+  - name: meko-lan
+    cidr: 10.90.0.0/24
+    accessible_by_user: true
+net_mappings:
+  - {host: team1, network: meko-lan, ip: 10.90.0.11}
+  - {host: team2, network: meko-lan, ip: 10.90.0.12}
+  - {host: team3, network: meko-lan, ip: 10.90.0.13}
+  - {host: checker, network: meko-lan, ip: 10.90.0.30}
+router_mappings:
+  - {router: gateway, network: meko-lan, ip: 10.90.0.1}
+groups:
+  - name: meko-teams
+    nodes: [team1, team2, team3]

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img" aria-label="Đầm lụa">
+  <rect width="400" height="480" fill="#efe3e6"/>
+  <g fill="#a85d74" stroke="#7d3f55" stroke-width="3" stroke-linejoin="round">
+    <path d="M170 90 L160 110 L140 150 L175 175 L175 210 L120 420 L280 420 L225 210 L225 175 L260 150 L240 110 L230 90 L200 120 Z"/>
+  </g>
+  <path d="M175 210 L225 210 L255 420 L145 420 Z" fill="#bd7389" opacity="0.6"/>
+  <circle cx="200" cy="95" r="6" fill="#7d3f55"/>
+</svg>

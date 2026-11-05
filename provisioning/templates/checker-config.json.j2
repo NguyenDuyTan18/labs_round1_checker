@@ -1,0 +1,9 @@
+{
+  "timeout": 5,
+  "teams": {
+{% for team, ip in meko_addresses.items() %}
+    "{{ ip }}": {"team": "{{ team }}", "url": "http://{{ ip }}", "staff_password": "{{ (meko_staff_secret ~ ':' ~ team) | hash('sha256') }}"}{{ "," if not loop.last }}
+
+{% endfor %}
+  }
+}

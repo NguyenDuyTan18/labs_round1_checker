@@ -1,0 +1,20 @@
+{
+  "products": [
+    {"id": 1, "name": "Áo khoác linen Nắng Mai", "category": "Áo khoác", "price": 890000, "image": "jacket.svg", "description": "Linen thoáng nhẹ, phom suông hiện đại, hợp tiết trời giao mùa."},
+    {"id": 2, "name": "Đầm lụa Hoa Đêm", "category": "Đầm", "price": 1290000, "image": "dress.svg", "description": "Lụa mềm rủ, đường cắt thanh lịch cho buổi tối."},
+    {"id": 3, "name": "Túi da Mini Mộc", "category": "Phụ kiện", "price": 750000, "image": "bag.svg", "description": "Túi đeo chéo nhỏ gọn, da thuộc hoàn thiện thủ công."},
+    {"id": 4, "name": "Áo len Dệt Mây", "category": "Áo len", "price": 620000, "image": "knit.svg", "description": "Sợi cotton mềm, giữ ấm nhẹ cho ngày se lạnh."},
+    {"id": 5, "name": "Giày lười Phố Cổ", "category": "Giày", "price": 980000, "image": "shoe.svg", "description": "Giày da lộn êm chân, dễ phối cùng quần tây hoặc jeans."},
+    {"id": 6, "name": "Nón nỉ Chiều Thu", "category": "Phụ kiện", "price": 390000, "image": "hat.svg", "description": "Nón nỉ vành vừa, tông đất ấm áp cho mùa thu."}
+  ],
+  "collections": [
+    {"id": 1, "title": "Nàng thơ phố cổ", "description": "Sắc trung tính dịu nhẹ cho ngày dạo phố.", "season": "Thu 2026"},
+    {"id": 2, "title": "Chuyến đi biển", "description": "Linen, cotton và nắng vàng rực rỡ.", "season": "Hè 2026"},
+    {"id": 3, "title": "Tối giản công sở", "description": "Những món đồ dễ phối cho mỗi ngày đi làm.", "season": "Bốn mùa"},
+    {"id": 4, "title": "Đêm C-Nocturne", "description": "Bảng màu tối sang trọng cho sự kiện buổi tối.", "season": "Đông 2026"}
+  ],
+  "coupons": [
+    {"code": "MEKO10", "discount": 10, "note": "Giảm 10% cho mọi đơn hàng."},
+    {"code": "THUDONG15", "discount": 15, "note": "Ưu đãi bộ sưu tập Thu Đông, giảm 15%."}
+  ]
+}

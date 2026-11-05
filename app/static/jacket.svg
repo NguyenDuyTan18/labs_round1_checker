@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img" aria-label="Áo khoác linen">
+  <rect width="400" height="480" fill="#efe7db"/>
+  <g fill="#c9a98a" stroke="#8a6b4f" stroke-width="3" stroke-linejoin="round">
+    <path d="M150 90 L110 120 L70 190 L105 215 L120 180 L120 400 L280 400 L280 180 L295 215 L330 190 L290 120 L250 90 Z"/>
+    <path d="M150 90 L200 150 L250 90 L230 80 L200 100 L170 80 Z" fill="#b9956f"/>
+  </g>
+  <line x1="200" y1="150" x2="200" y2="400" stroke="#8a6b4f" stroke-width="3"/>
+  <circle cx="182" cy="230" r="5" fill="#8a6b4f"/>
+  <circle cx="182" cy="285" r="5" fill="#8a6b4f"/>
+  <circle cx="182" cy="340" r="5" fill="#8a6b4f"/>
+</svg>

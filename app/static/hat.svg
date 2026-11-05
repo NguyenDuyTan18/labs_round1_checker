@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img" aria-label="Nón nỉ">
+  <rect width="400" height="480" fill="#ece5db"/>
+  <g stroke="#6b4b34" stroke-width="3" stroke-linejoin="round">
+    <ellipse cx="200" cy="300" rx="130" ry="34" fill="#9c7650"/>
+    <path d="M135 300 Q130 190 200 185 Q270 190 265 300 Z" fill="#b2895f"/>
+    <path d="M135 290 Q200 312 265 290" fill="none" stroke="#6b4b34" stroke-width="6"/>
+  </g>
+</svg>

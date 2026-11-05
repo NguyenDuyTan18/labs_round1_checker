@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title }} · Meko Boutique</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='shop.css') }}">
+</head>
+<body>
+<div class="topbar">Miễn phí giao hàng cho đơn từ 1.000.000₫ · Đổi trả trong 14 ngày</div>
+
+<header>
+  <a class="brand" href="/">meko<span>.</span><small>BOUTIQUE</small></a>
+  <nav>
+    <a href="/category/Áo khoác">Thời trang</a>
+    <a href="/collections">Bộ sưu tập</a>
+    <a href="/category/Phụ kiện">Phụ kiện</a>
+    <a href="/member/benefits">Hội viên</a>
+  </nav>
+  <form class="search" action="/search">
+    <input name="q" placeholder="Tìm món đồ yêu thích" value="{{ q if q and not searched else '' }}">
+    <button aria-label="Tìm">⌕</button>
+  </form>
+  <div class="account-links">
+    {% if customer %}
+      <a class="pill" href="/account">{{ customer }}</a>
+      <a href="/account/orders">Đơn hàng</a>
+      <a href="/account/collection">BST của tôi</a>
+      <a href="/cart">Giỏ</a>
+    {% else %}
+      <a href="/login">Đăng nhập</a>
+      <a href="/register">Tạo tài khoản</a>
+      <a href="/cart">Giỏ</a>
+    {% endif %}
+  </div>
+  <button class="menu-toggle" aria-label="Danh mục" onclick="document.body.classList.toggle('nav-open')">☰</button>
+</header>
+
+<main>
+{% if error %}<div class="notice">{{ error }}</div>{% endif %}
+
+{% if hero %}
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">Bộ sưu tập Thu Đông 2026</p>
+    <h1>Mặc điều<br>mình yêu.</h1>
+    <p>Những thiết kế tinh giản, chất liệu tự nhiên và cảm hứng dành riêng cho bạn.</p>
+    <a class="button" href="/collections">Khám phá bộ sưu tập <b>↗</b></a>
+  </div>
+  <div class="hero-art"><img src="{{ url_for('static', filename='dress.svg') }}" alt="Đầm lụa Hoa Đêm"></div>
+  <div class="hero-index">01 <b>—</b> 0{{ products|length }}</div>
+</section>
+{% endif %}
+
+{% if item %}
+<section class="detail">
+  <div class="detail-img"><img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}"></div>
+  <div>
+    <p class="eyebrow">{{ item.category }}</p>
+    <h1>{{ item.name }}</h1>
+    <p class="muted">{{ item.description }}</p>
+    <strong class="price">{{ '{:,.0f}'.format(item.price) }}₫</strong>
+    <p class="muted">Chất liệu tuyển chọn · Đổi trả trong 14 ngày</p>
+    {% if customer %}
+      <form action="/cart/add/{{ item.id }}" method="post">
+        <label>Số lượng<input type="number" name="quantity" value="1" min="1" max="5"></label>
+        <button class="button">Thêm vào giỏ</button>
+      </form>
+      <form action="/account/collection/add/{{ item.id }}" method="post" style="margin-top:12px">
+        <button class="text-button">♡ Lưu vào bộ sưu tập cá nhân</button>
+      </form>
+    {% else %}
+      <a class="button" href="/login">Đăng nhập để mua hàng</a>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{% if form in ('register','login') %}
+<section class="form-panel">
+  <p class="eyebrow">Meko Boutique</p>
+  <h1>{{ title }}</h1>
+  <form method="post">
+    {% if form=='register' %}
+      <label>Họ tên<input name="name" required></label>
+      <label>Email<input name="email" type="email" required></label>
+    {% endif %}
+    <label>Tên đăng nhập<input name="username" required autocomplete="username"></label>
+    <label>Mật khẩu<input name="password" type="password" required minlength="10" autocomplete="current-password"></label>
+    <button class="button">{{ 'Tạo tài khoản' if form=='register' else 'Đăng nhập' }}</button>
+  </form>
+  <p class="sub-links">
+    {% if form=='login' %}Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
+    {% else %}Đã có tài khoản? <a href="/login">Đăng nhập</a>{% endif %}
+  </p>
+</section>
+{% endif %}
+
+{% if form=='account' %}
+<section class="form-panel">
+  <p class="eyebrow">Hồ sơ khách hàng</p>
+  <h1>Xin chào, {{ customer }}</h1>
+  {% if profile %}<span class="rank-badge">★ Hạng {{ ranks.get(profile.rank, 'Thành viên') }}</span>{% endif %}
+  <form method="post" action="/account/update">
+    <label>Họ tên<input name="name" value="{{ profile.name if profile else customer }}"></label>
+    <label>Email<input name="email" value="{{ profile.email if profile else '' }}"></label>
+    <label>Địa chỉ nhận hàng<input name="address" value="{{ profile.address if profile else '' }}"></label>
+    <button class="button">Lưu thay đổi</button>
+  </form>
+  <p class="sub-links"><a href="/account/orders">Đơn hàng của tôi</a> · <a href="/account/collection">Bộ sưu tập cá nhân</a> · <a href="/account/notes">Ghi chú bộ sưu tập</a> · <a href="/outfits/new">Tạo bộ phối đồ</a></p>
+  <form method="post" action="/logout" style="margin-top:14px"><button class="text-button">Đăng xuất</button></form>
+</section>
+{% endif %}
+
+{% if form=='staff-login' %}
+<section class="form-panel">
+  <p class="eyebrow">Khu vực nhân viên</p>
+  <h1>Đăng nhập vận hành</h1>
+  <form method="post">
+    <label>Mật khẩu nhân viên<input name="password" type="password" required></label>
+    <button class="button">Tiếp tục</button>
+  </form>
+</section>
+{% endif %}
+
+{% if form=='outfit' %}
+<section class="form-panel">
+  <p class="eyebrow">Studio phối đồ</p>
+  <h1>Tạo bộ phối đồ</h1>
+  <p class="muted">Tải lên tệp mô tả bộ phối dạng JSON. Hệ thống sẽ hiển thị bản xem trước của thiết kế. Trường <code>stylist_note</code> (tùy chọn) là ghi chú riêng của bạn.</p>
+  <form method="post" enctype="multipart/form-data">
+    <label>Tệp manifest (.json)<input name="manifest" type="file" accept="application/json,.json" required></label>
+    <button class="button">Xem bản phối</button>
+  </form>
+</section>
+{% endif %}
+
+{% if preview_text is defined %}
+<section class="form-panel">
+  <p class="eyebrow">Bộ phối của bạn</p>
+  <h1>Bản xem trước</h1>
+  <pre>{{ preview_text }}</pre>
+  <p class="sub-links">{% if outfit_token %}<a href="/outfits/{{ outfit_token }}">Xem ghi chú stylist</a> · {% endif %}<a href="/outfits/new">Tạo bộ phối khác</a></p>
+</section>
+{% endif %}
+
+{% if outfit %}
+<section class="form-panel">
+  <p class="eyebrow">Ghi chú stylist</p>
+  <h1>{{ outfit.name }}</h1>
+  <p>{{ outfit.stylist_note }}</p>
+</section>
+{% endif %}
+
+{% if note_collections is defined %}
+<section class="form-panel">
+  <p class="eyebrow">Ghi chú riêng</p>
+  <h1>{{ title }}</h1>
+  <form method="post">
+    <label>Bộ sưu tập<select name="collection_id">{% for c in note_collections %}<option value="{{ c.id }}">{{ c.title }}</option>{% endfor %}</select></label>
+    <label>Ghi chú<input name="note" maxlength="500" required></label>
+    <button class="button">Lưu ghi chú</button>
+  </form>
+  {% for n in notes %}
+  <p class="sub-links"><a href="/account/notes/{{ n.id }}">Ghi chú #{{ n.id }} · {{ n.title }}</a></p>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if note %}
+<section class="form-panel">
+  <p class="eyebrow">{{ note.title }}</p>
+  <h1>{{ title }}</h1>
+  <p>{{ note.note }}</p>
+  <p class="sub-links"><a href="/account/notes">Tất cả ghi chú</a></p>
+</section>
+{% endif %}
+
+{% if vip_offers is defined %}
+<section class="form-panel">
+  <p class="eyebrow">Đặc quyền hội viên</p>
+  <h1>Chào mừng hạng C-Nocturne</h1>
+  <span class="rank-badge">★ C-Nocturne</span>
+  {% for o in vip_offers %}
+  <p class="sub-links"><a href="/member/offers/{{ o.id }}">Ưu đãi #{{ o.id }}</a></p>
+  {% else %}<p class="muted">Chưa có ưu đãi mới.</p>{% endfor %}
+</section>
+{% endif %}
+
+{% if vip_offer %}
+<section class="form-panel">
+  <p class="eyebrow">Đặc quyền hội viên</p>
+  <h1>Ưu đãi #{{ vip_offer.id }}</h1>
+  <p>Mã quà tặng riêng: <strong>{{ vip_offer.code }}</strong></p>
+  <p class="muted">Mã dùng tại quầy ưu đãi dành cho hội viên cao cấp.</p>
+</section>
+{% endif %}
+
+{% if vip_locked %}
+<section class="form-panel">
+  <p class="eyebrow">Đặc quyền hội viên</p>
+  <h1>Ưu đãi C-Nocturne</h1>
+  <p class="muted">Khu vực này dành riêng cho hội viên hạng C-Nocturne — hạng mời đặc biệt theo thư ngỏ của cửa hàng.</p>
+</section>
+{% endif %}
+
+{% if collections is defined %}
+<section class="content-section">
+  <p class="eyebrow">Cảm hứng mặc đẹp</p>
+  <h1>{{ title }}</h1>
+  <form action="/collections/search" class="collection-search">
+    <input name="q" value="{{ q|default('') }}" placeholder="Tìm bộ sưu tập theo tên">
+    <button class="button">Tìm kiếm</button>
+  </form>
+  {% if collections %}
+  <div class="collection-grid">
+    {% for c in collections %}
+    <article class="collection-card">
+      <div class="num">0{{ loop.index }}</div>
+      {% if c.season is defined and c.season %}<span class="season">{{ c.season }}</span>{% endif %}
+      <h2>{{ c.title }}</h2>
+      <p class="muted">{{ c.description }}</p>
+      <a href="/collections/search?q={{ c.title|urlencode }}">Xem tuyển chọn ↗</a>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}<p class="empty">Không tìm thấy bộ sưu tập phù hợp.</p>{% endif %}
+</section>
+{% endif %}
+
+{% set show_products = hero or category is defined or (q is defined and not searched and collections is not defined) %}
+{% if show_products %}
+<section class="content-section">
+  <div class="section-heading">
+    <div><p class="eyebrow">Lựa chọn của Meko</p><h2>{{ 'Sản phẩm nổi bật' if hero else title }}</h2></div>
+    <a href="/category/Tất cả" style="font-size:12.5px;color:var(--plum);font-weight:600">Xem tất cả ↗</a>
+  </div>
+  <div class="product-grid">
+    {% for p in products if (category is not defined or category in ('Tất cả','') or p.category==category) and (q is not defined or q|lower in p.name|lower or q|lower in p.category|lower) %}
+    <article class="product-card">
+      <a href="/product/{{ p.id }}"><img src="{{ url_for('static', filename=p.image) }}" alt="{{ p.name }}"></a>
+      <div class="body">
+        <span class="tag">{{ p.category }}</span>
+        <h3><a href="/product/{{ p.id }}">{{ p.name }}</a></h3>
+        <div class="product-bottom"><b>{{ '{:,.0f}'.format(p.price) }}₫</b><a href="/product/{{ p.id }}" aria-label="Xem">＋</a></div>
+      </div>
+    </article>
+    {% else %}
+    <p class="empty">Chưa có sản phẩm phù hợp.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if cart_items is defined %}
+<section class="content-section">
+  <h1>Giỏ hàng</h1>
+  {% if cart_items %}
+  <div class="data-card">
+    {% for p in cart_items %}
+    <div class="line-item"><span style="margin-left:0">{{ p.name }} × {{ p.quantity }}</span><b>{{ '{:,.0f}'.format(p.price*p.quantity) }}₫</b></div>
+    {% endfor %}
+  </div>
+  {% if coupons %}
+  <p class="muted" style="margin-bottom:0">Mã ưu đãi đang áp dụng:</p>
+  <div class="coupon-hint">{% for c in coupons %}<code>{{ c.code }} · -{{ c.discount }}%</code>{% endfor %}</div>
+  {% endif %}
+  <form method="post" action="/checkout" class="collection-search">
+    <input name="coupon" placeholder="Nhập mã ưu đãi (tùy chọn)">
+    <input name="memo" maxlength="160" placeholder="Ghi chú giao nhận (tùy chọn)">
+    <button class="button">Đặt hàng</button>
+  </form>
+  {% else %}
+  <p class="empty">Giỏ hàng đang chờ những món đồ bạn yêu thích.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if personal_items is defined %}
+<section class="content-section">
+  <p class="eyebrow">Phong cách của riêng bạn</p>
+  <h1>Bộ sưu tập cá nhân</h1>
+  {% if personal_items %}
+  <div class="product-grid">
+    {% for p in personal_items %}
+    <article class="product-card">
+      <a href="/product/{{ p.id }}"><img src="{{ url_for('static', filename=p.image) }}" alt="{{ p.name }}"></a>
+      <div class="body"><span class="tag">{{ p.category }}</span><h3>{{ p.name }}</h3>
+      <div class="product-bottom"><b>{{ '{:,.0f}'.format(p.price) }}₫</b></div></div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}<p class="empty">Hãy lưu những sản phẩm bạn yêu thích vào bộ sưu tập cá nhân.</p>{% endif %}
+</section>
+{% endif %}
+
+{% if orders is defined and not staff %}
+<section class="content-section">
+  <h1>{{ title }}</h1>
+  {% if orders %}
+  <div class="data-card">
+    {% for o in orders %}
+    <div class="order-row"><b style="margin-left:0">{{ o.code }}</b><span class="status-tag">{{ o.status }}</span><span>{{ '{:,.0f}'.format(o.total) }}₫</span><a href="/account/orders/{{ o.id }}/invoice">Xem hóa đơn ↗</a></div>
+    {% endfor %}
+  </div>
+  {% else %}<p class="empty">Bạn chưa có đơn hàng nào.</p>{% endif %}
+</section>
+{% endif %}
+
+{% if invoice %}
+<section class="content-section">
+  <p class="eyebrow">Hóa đơn {{ invoice.code }}</p>
+  <h1>{{ title }}</h1>
+  <div class="data-card">
+    {% for i in invoice_items %}
+    <div class="line-item"><span style="margin-left:0">{{ i.name }} × {{ i.quantity }}</span><b>{{ '{:,.0f}'.format(i.price*i.quantity) }}₫</b></div>
+    {% endfor %}
+  </div>
+  <div class="total-row"><span class="status-tag">{{ invoice.status }}</span><h2>Tổng cộng {{ '{:,.0f}'.format(invoice.total) }}₫</h2></div>
+  {% if invoice.memo %}<p class="muted">Ghi chú giao nhận: {{ invoice.memo }}</p>{% endif %}
+</section>
+{% endif %}
+
+{% if staff %}
+<section class="content-section">
+  <p class="eyebrow">Khu vực nhân viên</p>
+  <h1>{{ title }}</h1>
+  <p class="sub-links"><a href="/staff">Quản lý đơn hàng</a> · <a href="/staff/products">Quản lý sản phẩm</a> · <a href="/staff/vip">Ưu đãi C-Nocturne</a> · <a href="/staff/reconciliation">Đối soát vận hành</a></p>
+  {% if staff_offers is defined %}
+  {% if staff_offer %}<p>Ưu đãi #{{ staff_offer.id }}: <strong>{{ staff_offer.code }}</strong></p>{% endif %}
+  <form method="post" action="/staff/vip" class="staff-form">
+    <label>Mã ưu đãi<input name="code" maxlength="160" required></label>
+    <button class="button">Tạo ưu đãi</button>
+  </form>
+  <form method="post" action="/staff/vip/members" class="staff-form">
+    <label>Tên đăng nhập khách<input name="username" required></label>
+    <button class="button">Cấp hạng C-Nocturne</button>
+  </form>
+  <div class="data-card">
+    {% for o in staff_offers %}
+    <div class="line-item"><a href="/staff/vip/offers/{{ o.id }}">Ưu đãi #{{ o.id }}</a></div>
+    {% endfor %}
+  </div>
+  {% elif staff_reconciliations is defined %}
+  <form method="post" action="/staff/reconciliation" class="staff-form">
+    <label>Nội dung đối soát<input name="value" maxlength="160" required></label>
+    <button class="button">Lưu bản đối soát</button>
+  </form>
+  <p class="sub-links"><a href="/exports/operations.sql">Tải bản xuất vận hành</a></p>
+  <div class="data-card">
+    {% for r in staff_reconciliations %}
+    <div class="line-item"><span style="margin-left:0">{{ r.ref }}</span></div>
+    {% endfor %}
+  </div>
+  {% elif staff_products is defined %}
+  <form method="post" action="/staff/products" class="staff-form">
+    <label>Tên sản phẩm<input name="name" required></label>
+    <label>Danh mục<input name="category" required></label>
+    <label>Giá (₫)<input name="price" type="number" min="1" required></label>
+    <label>Mô tả<input name="description"></label>
+    <button class="button">Thêm sản phẩm</button>
+  </form>
+  <div class="data-card">
+    {% for p in staff_products %}
+    <div class="line-item"><span style="margin-left:0">{{ p.name }} · {{ p.category }}</span><b>{{ '{:,.0f}'.format(p.price) }}₫</b></div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="data-card">
+    {% for o in orders %}
+    <div class="order-row"><b style="margin-left:0">{{ o.code }}</b><span>{{ '{:,.0f}'.format(o.total) }}₫</span>
+      <form method="post" action="/staff/orders/{{ o.id }}/status" class="inline-form">
+        <select name="status">
+          <option {{ 'selected' if o.status=='Đang xử lý' }}>Đang xử lý</option>
+          <option {{ 'selected' if o.status=='Đang giao' }}>Đang giao</option>
+          <option {{ 'selected' if o.status=='Đã giao' }}>Đã giao</option>
+          <option {{ 'selected' if o.status=='Đã hủy' }}>Đã hủy</option>
+        </select>
+        <button>Cập nhật</button>
+      </form>
+    </div>
+    {% else %}<p class="empty">Chưa có đơn hàng.</p>{% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+</main>
+
+<footer>
+  <a class="brand" href="/">meko<span>.</span><small>BOUTIQUE</small></a>
+  <p>Phong cách riêng, bắt đầu từ hôm nay. Thời trang thiết kế thủ công tại Việt Nam.</p>
+  <small>© {{ year }} Meko Boutique</small>
+</footer>
+</body>
+</html>
